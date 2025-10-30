@@ -23,10 +23,10 @@ public class Reservation {
     private UUID reservationId;
 
     @Column(name = "user_id", nullable = false)
-    private UUID userId;
+    private String userId;
 
     @Column(name = "stall_id", nullable = false)
-    private UUID stallId;
+    private String stallId;
 
     @Column(name = "event_name", nullable = false)
     private String eventName;

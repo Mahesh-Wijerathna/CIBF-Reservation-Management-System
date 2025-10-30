@@ -16,8 +16,8 @@ import java.util.UUID;
 public class ReservationResponseDTO {
 
     private UUID reservationId;
-    private UUID userId;
-    private UUID stallId;
+    private String userId;
+    private String stallId;
     private String eventName;
     private LocalDateTime reservationDate;
     private LocalDateTime startTime;

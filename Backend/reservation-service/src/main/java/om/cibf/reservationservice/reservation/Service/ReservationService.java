@@ -80,7 +80,7 @@ public class ReservationService {
         return mapToResponseDTO(reservationOpt.get(), null);
     }
 
-    public List<ReservationResponseDTO> getReservationsByUserId(UUID userId) {
+    public List<ReservationResponseDTO> getReservationsByUserId(String userId) {
         return reservationRepository.findByUserId(userId).stream()
                 .map(reservation -> mapToResponseDTO(reservation, null))
                 .collect(Collectors.toList());

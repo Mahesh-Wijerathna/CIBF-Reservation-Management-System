@@ -11,16 +11,16 @@ import java.util.UUID;
 
 public interface ReservationRepository extends JpaRepository<Reservation, UUID> {
 
-    List<Reservation> findByUserId(UUID userId);
+    List<Reservation> findByUserId(String userId);
 
-    List<Reservation> findByStallId(UUID stallId);
+    List<Reservation> findByStallId(String stallId);
 
     List<Reservation> findByStatus(Reservation.ReservationStatus status);
 
     @Query("SELECT r FROM Reservation r WHERE r.stallId = :stallId AND " +
            "((r.startTime <= :endTime AND r.endTime >= :startTime)) AND " +
            "r.status IN ('PENDING', 'CONFIRMED')")
-    List<Reservation> findConflictingReservations(@Param("stallId") UUID stallId,
+    List<Reservation> findConflictingReservations(@Param("stallId") String stallId,
                                                  @Param("startTime") LocalDateTime startTime,
                                                  @Param("endTime") LocalDateTime endTime);
 }
