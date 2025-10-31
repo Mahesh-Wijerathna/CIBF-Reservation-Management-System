@@ -1,11 +1,15 @@
 package om.cibf.reservationservice.reservation.Service;
 
+import om.cibf.reservationservice.client.StallServiceClient;
+import om.cibf.reservationservice.client.dto.StallAvailabilityResponse;
+import om.cibf.reservationservice.client.dto.StallDTO;
 import om.cibf.reservationservice.reservation.DTO.ReservationRequestDTO;
 import om.cibf.reservationservice.reservation.DTO.ReservationResponseDTO;
 import om.cibf.reservationservice.reservation.Entity.Reservation;
 import om.cibf.reservationservice.reservation.Repository.ReservationRepository;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
+import feign.FeignException;
 
 import java.util.List;
 import java.util.Optional;
@@ -17,18 +21,37 @@ import java.util.stream.Collectors;
 public class ReservationService {
 
     private final ReservationRepository reservationRepository;
+    private final StallServiceClient stallServiceClient;
 
-    public ReservationService(ReservationRepository reservationRepository) {
+    public ReservationService(ReservationRepository reservationRepository,
+                            StallServiceClient stallServiceClient) {
         this.reservationRepository = reservationRepository;
+        this.stallServiceClient = stallServiceClient;
     }
 
     public ReservationResponseDTO createReservation(ReservationRequestDTO request) {
         try {
-            // Note: Stall validation should be done via stall service
-            // For now, we'll assume the stall exists and is available
-            // In a real implementation, you'd call the stall service API
+            // Validate stall exists and is available via stall service
+            try {
+                StallDTO stall = stallServiceClient.getStallById(request.getStallId());
+                if (stall == null) {
+                    return ReservationResponseDTO.builder()
+                            .error("Stall not found")
+                            .build();
+                }
+                
+                if (!stall.getAvailable()) {
+                    return ReservationResponseDTO.builder()
+                            .error("Stall is currently unavailable")
+                            .build();
+                }
+            } catch (Exception e) {
+                return ReservationResponseDTO.builder()
+                        .error("Stall service is unreachable. Please try again later.")
+                        .build();
+            }
 
-            // Check for conflicting reservations
+            // Check for conflicting reservations in our database
             List<Reservation> conflicts = reservationRepository.findConflictingReservations(
                     request.getStallId(),
                     request.getStartTime(),
@@ -160,6 +183,16 @@ public class ReservationService {
                     .build();
         }
 
+        // Try to release the stall in stall service first
+        try {
+            stallServiceClient.releaseStall(reservation.getStallId());
+        } catch (Exception e) {
+            return ReservationResponseDTO.builder()
+                    .error("Stall service is unreachable. Please try again later.")
+                    .build();
+        }
+
+        // Only cancel if stall service successfully released the stall
         reservation.setStatus(Reservation.ReservationStatus.CANCELLED);
         Reservation updatedReservation = reservationRepository.save(reservation);
 

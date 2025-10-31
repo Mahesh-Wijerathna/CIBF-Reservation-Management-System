@@ -172,3 +172,38 @@ response:
             "error": null
         }
 
+# Get conflicting reservations with Stall Service
+request:
+    PUT http://localhost:8083/api/v1/stalls/{stallId}/availability
+    Body:
+    {
+        "available": true,
+        "startDate": "2025-11-01T00:00:00",
+        "endDate": "2025-11-30T23:59:59",
+        "reason": "Maintenance completed"
+    }
+response:
+    200 OK
+    Body:
+    {
+        "id": 1,
+        "stallNumber": "A-101",
+        "area": "HALL_A",
+        "size": "MEDIUM",
+        "price": 5000.00,
+        "available": true,
+        "updatedAt": "2025-10-30T10:30:00",
+        "availabilityPeriod": {
+            "startDate": "2025-11-01T00:00:00",
+            "endDate": "2025-11-30T23:59:59"
+        }
+    }
+
+    409 Conflict
+    Body:
+    {
+        "timestamp": "2025-10-30T10:30:00",
+        "status": 409,
+        "error": "Conflict",
+        "message": "Cannot mark stall as unavailable. Active reservations exist."
+    }

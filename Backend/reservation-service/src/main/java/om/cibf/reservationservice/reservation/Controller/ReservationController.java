@@ -26,7 +26,7 @@ public class ReservationController {
     }
 
     // Create a new reservation
-    @PostMapping("/create")
+    @PostMapping
     public ResponseEntity<ReservationResponseDTO> createReservation(@RequestBody ReservationRequestDTO request) {
         ReservationResponseDTO response = reservationService.createReservation(request);
         if (response.getError() != null) {
